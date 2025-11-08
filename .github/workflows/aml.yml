@@ -1,0 +1,43 @@
+
+name: Build Xcode PKG
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch: # rulează manual dacă vrei
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Set up Xcode
+        uses: maxim-lobanov/setup-xcode@v3
+        with:
+          xcode-version: '16' # versiunea ta Xcode
+
+      - name: Build App
+        run: |
+          xcodebuild -scheme "NumeScheme" \
+                     -workspace "NumeProiect.xcworkspace" \
+                     -configuration Release \
+                     -derivedDataPath build
+
+      - name: Create PKG
+        run: |
+          mkdir -p output
+          pkgbuild --root build/Build/Products/Release/NumeApp.app \
+                   --identifier com.numeletau.MyApp \
+                   --version 1.0 \
+                   --install-location /Applications \
+                   output/MyXcodeApp.pkg
+
+      - name: Upload PKG Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: MyXcodeApp-PKG
+          path: output/MyXcodeApp.pkg
